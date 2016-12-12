@@ -39,7 +39,7 @@ router.route("/token")
     .post(function(req,res){
           var db = new mongoUser();
           var response = {};
-          mongoUser.find({login:req.body.username,password:req.body.password },function(err,data){
+          mongoUser.find({username:req.body.username,password:req.body.password },function(err,data){
             console.log('data',data[0]._id);
              if(err) {
                  response = err;
@@ -50,71 +50,71 @@ router.route("/token")
              res.json(response);
           });
         });
-      router.route("/token/:id")
-      .get(function(req,res){
-        var response = {};
-        mongoUser.findById(req.params.id,function(err,data){
-        // This will run Mongo Query to fetch data based on ID.
-            if(err) {
-                response = {"error" : true,"message" : "Error fetching data"};
-            } else {
-                response = {"error" : false,"message" : data};
-            }
-            res.json(response);
-        });
-    })
-    .put(function(req,res){
-      var response = {};
-      // first find out record exists or not
-      // if it does then update the record
-      mongoUser.findById(req.params.id,function(err,data){
-          if(err) {
-              response = {"error" : true,"message" : "Error fetching data"};
-          } else {
-            // console.log("vbfgvb", req.body);
-          // we got data from Mongo.
-          // change it accordingly.
-              if(req.body.loginName !== undefined) {
-                  // case where email needs to be updated.
-                  data.login= req.body.loginName;
-              }
-              if(req.body.password !== undefined) {
-                  // case where password needs to be updated
-                  data.password = req.body.password;
-              }
-              // console.log(data, "data");
-              // save the data
-              data.save(function(err){
-                  if(err) {
-                      response = {"error" : true,"message" : "Error updating data"};
-                  } else {
-                      response = {"error" : false,"message" : "Data is updated for "+req.params.id};
-                  }
-                  res.json(response);
-              })
-          }
-      });
-  })
-
-        .delete(function(req,res){
-          var response = {};
-          // find the data
-          mongoUser.findById(req.params.id,function(err,data){
-              if(err) {
-                  response = {"error" : true,"message" : "Error fetching data"};
-              } else {
-                  // data exists, remove it.
-                  mongoUser.remove({_id : req.params.id},function(err){
-                      if(err) {
-                          response = {"error" : true,"message" : "Error deleting data"};
-                      } else {
-                          response = {"error" : true,"message" : "Data associated with "+req.params.id+"is deleted"};
-                      }
-                      res.json(response);
-                  });
-              }
-          });
-      })
+    //   router.route("/token/:id")
+    //   .get(function(req,res){
+    //     var response = {};
+    //     mongoUser.findById(req.params.id,function(err,data){
+    //     // This will run Mongo Query to fetch data based on ID.
+    //         if(err) {
+    //             response = {"error" : true,"message" : "Error fetching data"};
+    //         } else {
+    //             response = {"error" : false,"message" : data};
+    //         }
+    //         res.json(response);
+    //     });
+    // })
+  //   .put(function(req,res){
+  //     var response = {};
+  //     // first find out record exists or not
+  //     // if it does then update the record
+  //     mongoUser.findById(req.params.id,function(err,data){
+  //         if(err) {
+  //             response = {"error" : true,"message" : "Error fetching data"};
+  //         } else {
+  //           // console.log("vbfgvb", req.body);
+  //         // we got data from Mongo.
+  //         // change it accordingly.
+  //             if(req.body.loginName !== undefined) {
+  //                 // case where email needs to be updated.
+  //                 data.login= req.body.loginName;
+  //             }
+  //             if(req.body.password !== undefined) {
+  //                 // case where password needs to be updated
+  //                 data.password = req.body.password;
+  //             }
+  //             // console.log(data, "data");
+  //             // save the data
+  //             data.save(function(err){
+  //                 if(err) {
+  //                     response = {"error" : true,"message" : "Error updating data"};
+  //                 } else {
+  //                     response = {"error" : false,"message" : "Data is updated for "+req.params.id};
+  //                 }
+  //                 res.json(response);
+  //             })
+  //         }
+  //     });
+  // })
+      //
+      //   .delete(function(req,res){
+      //     var response = {};
+      //     // find the data
+      //     mongoUser.findById(req.params.id,function(err,data){
+      //         if(err) {
+      //             response = {"error" : true,"message" : "Error fetching data"};
+      //         } else {
+      //             // data exists, remove it.
+      //             mongoUser.remove({_id : req.params.id},function(err){
+      //                 if(err) {
+      //                     response = {"error" : true,"message" : "Error deleting data"};
+      //                 } else {
+      //                     response = {"error" : true,"message" : "Data associated with "+req.params.id+"is deleted"};
+      //                 }
+      //                 res.json(response);
+      //             });
+      //         }
+      //     });
+      // })
 
       router.route("/teams")
         .get(function(req,res){
@@ -190,6 +190,37 @@ router.route("/token")
                     res.json(response);
                 });
             })
+            router.route("/users")
+                .get(function(req,res){
+                    var response = {};
+                    mongoUser.find({},function(err,data){
+                        if(err) {
+                            response = {"error" : true,"message" : "Error fetching data"};
+                        } else {
+                            response = {"error" : false,"user" : data};
+                        }
+                        res.json(response);
+                    });
+                })
+
+                .post(function(req,res){
+                      var db = new mongoUser();
+                      var response = {};
+                      db.firstname=req.body.firstname;
+                      db.lastname=req.body.lastname;
+                      db.email=req.body.email;
+                      db.username=req.body.username;
+                      db.password=req.body.password;
+                      db.save(function(err){
+                          if(err) {
+                              response = {"error" : true,"message" : "Error adding data"};
+                          } else {
+                              response = {"message" : "Data added"};
+                          }
+                          res.json(response);
+                      });
+                  });
+
             router.route("/users/:id")
                 .get(function(req,res){
                 var response={};
