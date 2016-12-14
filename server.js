@@ -1,9 +1,10 @@
 var express     =   require("express");
 var app         =   express();
 var bodyParser  =   require("body-parser");
-var mongoUser     =   require("./models/mongoUser");
+var mongoUser   =   require("./models/mongoUser");
 var mongoTeam   =   require("./models/mongoTeam");
-var mongoProfile   =   require("./models/mongoProfile");
+var mongoProfile=   require("./models/mongoProfile");
+var mongoLeave  =   require("./models/mongoLeave");
 var router      =   express.Router();
 
 var mongoose    =   require("mongoose");
@@ -281,6 +282,54 @@ router.route("/token")
                     }
                 });
             })
+
+            router.route("/leavehistories")
+                .get(function(req,res){
+                    // console.log("sdsfsdf", req.query.userId);
+                    var response = {};
+                    mongoLeave.find({userId:req.query.userId},function(err,data){
+                        if(err) {
+                            response = {"error" : true,"message" : "Error fetching data"};
+                        } else {
+                            // console.log("data",data);
+                            response = {"leavehistories":data};
+                        }
+                        res.json(response);
+                    });
+                })
+
+                .post(function(req,res){
+
+                      var db = new mongoLeave();
+                      var response = {};
+                      db.name = req.body.name;
+                      db.department = req.body.department;
+                      db.reason = req.body.reason;
+                      db.date = req.body.date;
+                      db.days = req.body.days;
+                      db.userId = req.body.userId;
+                      db.save(function(err){
+                          if(err) {
+                              response = {"error" : true,"message" : "Error adding data"};
+                          } else {
+                              response = {"message" : "Data added"};
+                          }
+                          res.json(response);
+                      });
+                  });
+                  router.route("/leavehistories/:id")
+                      .get(function(req,res){
+                      var response={};
+                      mongoLeave.find({userId:req.params.id},function(err,data){
+                        if(err) {
+                            response = {"error" : true,"message" : "Error fetching data"};
+                        } else {
+                          console.log(data, "gfgdf");
+                            response = {"leavehistories" : data};
+                        }
+                        res.json(response);
+                      });
+                    })
 
 
 app.use('/api',router);
