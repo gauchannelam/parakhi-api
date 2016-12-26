@@ -5,6 +5,7 @@ var mongoUser   =   require("./models/mongoUser");
 var mongoTeam   =   require("./models/mongoTeam");
 var mongoProfile=   require("./models/mongoProfile");
 var mongoLeave  =   require("./models/mongoLeave");
+// var mongouserSetting  = require("./models/mongouserSetting");
 var router      =   express.Router();
 
 var mongoose    =   require("mongoose");
@@ -51,6 +52,20 @@ router.route("/token")
              res.json(response);
           });
         });
+        // .post(function(req,res){
+        //       var db = new mongoUser();
+        //       var response = {};
+        //       mongoUser.find({username:req.body.username,password:req.body.password },function(err,data){
+        //         console.log('data',data[0]._id);
+        //          if(err) {
+        //              response = err;
+        //          }
+        //           if(admin=="true"){
+        //              response = { access_token: data[0]._id };
+        //            }
+        //          res.json(response);
+        //       });
+        //     });
     //   router.route("/token/:id")
     //   .get(function(req,res){
     //     var response = {};
@@ -198,7 +213,7 @@ router.route("/token")
                         if(err) {
                             response = {"error" : true,"message" : "Error fetching data"};
                         } else {
-                            response = {"error" : false,"user" : data};
+                            response = {"users" : data};
                         }
                         res.json(response);
                     });
@@ -211,6 +226,7 @@ router.route("/token")
                       db.lastname=req.body.lastname;
                       db.email=req.body.email;
                       db.username=req.body.username;
+                      db.admin = req.body.admin;
                       db.password=req.body.password;
                       db.save(function(err){
                           if(err) {
@@ -284,7 +300,7 @@ router.route("/token")
             })
 
             router.route("/leavehistories")
-                .get(function(req,res){
+              .get(function(req,res){
                     // console.log("sdsfsdf", req.query.userId);
                     var response = {};
                     mongoLeave.find({userId:req.query.userId},function(err,data){
@@ -330,6 +346,174 @@ router.route("/token")
                         res.json(response);
                       });
                     })
+                  //   router.route("/userSettings")
+                  // .get(function(req,res){
+                  //   var response={};
+                  //   mongouserSetting.find({},function(err,data){
+                  //     if(err) {
+                  //         response = {"error" : true,"message" : "Error fetching data"};
+                  //     } else {
+                  //         response = {"userSettings" : data};
+                  //     }
+                  //     res.json(response);
+                  //   });
+                  // })
+                  //       .post(function(req,res){
+                  //
+                  //             var db = new mongouserSetting();
+                  //             var response = {};
+                  //
+                  //             db.save(function(err){
+                  //                 if(err) {
+                  //                     response = {"error" : true,"message" : "Error adding data"};
+                  //                 } else {
+                  //                     response = {"message" : "Data added"};
+                  //                 }
+                  //                 res.json(response);
+                  //             });
+                  //         });
+                          // router.route("/leavemessages")
+                          //     .get(function(req,res){
+                          //         // console.log("sdsfsdf", req.query.userId);
+                          //         var response = {};
+                          //         // mongoLeave.find({textSearch:req.query},function(err,data){
+                          //           console.log('asdfgh',req.query.textSearch);
+                          //           var textSearch =req.query.textSearch;
+                          //           console.log("dvf", textSearch);
+                          //           if(req.query.textSearch){
+                          //             //   mongoLeave.find({name:new RegExp(textSearch,'i')
+                          //             // }).exec(function(err, collection) {
+                          //             //     console.log('asd',collection);
+                          //             //           res.send(collection);
+                          //             //
+                          //             //   })
+                          //             var re = new RegExp(req.params.search, 'i');
+                          //
+                          //            mongoLeave.find([{ 'department':{ $regex: re }}]).exec(function(err, collection) {
+                          //              console.log('cvb',collection);
+                          //                res.json(collection);
+                          //             });
+                          //           } else{
+                          //            mongoLeave.find({},function(err,data){
+                          //                if(err) {
+                          //                    response = {"error" : true,"message" : "Error fetching data"};
+                          //                } else {
+                          //                    // console.log("data",data);
+                          //                    response = {"leavemessage":data};
+                          //                }
+                          //                res.json(response);
+                          //            });
+                          //          }
+                          //         // });
+                          //     })
+                          router.route("/leavemessages")
+                              .get(function(req,res){
+                                if(typeof req.query.textSearch == "undefined"){
+                                    var  searchCondition ={};
+                                }else{
+                                          var query = new RegExp(req.query.textSearch,'i');
+                                          var terms = req.query.textSearch.split(" ");
+                                          terms = terms.map(function(textSearch) {
+                                          return new RegExp(textSearch, "i");
+                                       });
+                                      //  var searchCondition = {
+                                      //   name: {
+                                      //       $all: terms
+                                      //   },
+                                      //   days:{
+                                      //       $all: terms
+                                      //   }
+                                      // };
+
+
+                                          var searchCondition = {
+                                                    $or: [{
+                                                        name: {
+                                                            $all: terms
+                                                        }
+                                                    }, {
+                                                        days: {
+                                                            $all: terms
+                                                        }
+                                                    },{
+                                                        reason: {
+                                                            $all: terms
+                                                        }
+                                                    }]
+                                                };
+                                            console.log('searchCondition',searchCondition);
+
+                                }
+                                     mongoLeave.find(searchCondition, function(err, search) {
+                                       if (err)
+                                         res.send(err);
+                                         var SearchJson=[];
+                                         search.forEach(function(leave){
+                                            SearchJson.push({_id:leave._id, name:leave.name,approve:leave.approve, days:leave.days, reason:leave.reason});
+                                         })
+                                          response = {"leavemessages":SearchJson};
+                                         console.log('SearchJson',response);
+                                       res.json(response);
+                                     });
+                              })
+
+                              .post(function(req,res){
+
+                                    var db = new mongoLeave();
+                                    var response = {};
+                                    db.name = req.body.name;
+                                    db.department = req.body.department;
+                                    db.reason = req.body.reason;
+                                    db.date = req.body.date;
+                                    db.days = req.body.days;
+                                    db.userId = req.body.userId;
+                                    db.approve = req.body.approve;
+                                    db.save(function(err){
+                                        if(err) {
+                                            response = {"error" : true,"message" : "Error adding data"};
+                                        } else {
+                                            response = {"message" : "Data added"};
+                                        }
+                                        res.json(response);
+                                    });
+                                });
+                                router.route("/leavemessages/:id")
+                                .get(function(req,res){
+                                var response={};
+                                mongoLeave.findById(req.params.id,function(err,data){
+                                  if(err) {
+                                      response = {"error" : true,"message" : "Error fetching data"};
+                                  } else {
+                                      response = {"leavemessage" : data};
+                                  }
+                                  res.json(response);
+                                });
+                             })
+                              .put(function(req,res){
+                                var response = {};
+                                mongoLeave.findById(req.params.id,function(err,data){
+                                    if(err) {
+                                        response = {"error" : true,"message" : "Error fetching data"};
+                                    } else {
+                                         data.approve= req.body.reason||data.reason;
+                                         data.approve= req.body.days||data.days;
+
+                                         data.approve= req.body.date||data.date;
+                                         data.approve= req.body.approve||data.approve;
+                                         console.log('datassssssssssss',data,req.body.days);
+
+                                        data.save(function(err){
+                                            if(err) {
+                                                response = {"error" : true,"message" : "Error updating data"};
+                                            } else {
+                                                response = {"message" : "Data is updated for "+req.params.id};
+                                            }
+                                            res.json(response);
+                                        })
+                                    }
+                                });
+                            })
+
 
 
 app.use('/api',router);
